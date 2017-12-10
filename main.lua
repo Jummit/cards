@@ -7,8 +7,6 @@ function love.load()
         {
           x=100,
           y=200,
-          w=100,
-          h=150,
           cards.tree
         }
       )

@@ -48,7 +48,12 @@ return {
               self[deck_num]:draw()
             end
             if self.grabbed then
-              self.grabbed:draw(love.mouse.getX(), love.mouse.getY(), self.w, self.h)
+              self.grabbed.card:draw(
+                love.mouse.getX()-self.grabbed.offset.x,
+                love.mouse.getY()-self.grabbed.offset.y,
+                self.w,
+                self.h
+              )
             end
           end,
           update = function(self, dt)
@@ -60,7 +65,13 @@ return {
                   local card = deck[card_num]
                   if mouse_x>deck.x and mouse_y>deck.y then
                     if mouse_x<deck.x+card_width-1 and mouse_y<deck.y+card_height-1 then
-                      self.grabbed = card
+                      self.grabbed = {
+                        card = card,
+                        offset = {
+                          x = mouse_x-deck.x,
+                          y = mouse_y-deck.y
+                        }
+                      }
                     end
                   end
                 end
