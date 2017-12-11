@@ -1,36 +1,34 @@
-local card_width = 100
-local card_height = 150
-local assets = {
-  deck = love.graphics.newImage("/Assets/deck.png"),
-  card = love.graphics.newImage("/Assets/card.png")
-}
-local draw_element = {
-  text = function(element, element_x, element_y)
-    if #element.text*5.5>card_width then
-      local Font = love.graphics.getFont()
-      local text_x = 0
-      local max_text_width = element.w/Font:getWidth("d") or card_width/Font:getWidth("d")
-      while true do
-        local text = string.sub(element.text, text_x, text_x+max_text_width-1)
-        print(text)
-        if text == "" then
-          break
-        else
-          love.graphics.print(text, element_x, element_y+text_x)
+local card_manager = {}
+card_manager = {
+  card_width=100,
+  card_height=150,
+  draw_element = {
+    text = function(element, element_x, element_y)
+      if #element.text*5.5>card_manager.card_width then
+        local Font = love.graphics.getFont()
+        local text_x = 0
+        local max_text_width = element.w/Font:getWidth("d") or card_manager.card_width/Font:getWidth("d")
+        while true do
+          local text = string.sub(element.text, text_x, text_x+max_text_width-1)
+          if text == "" then
+            break
+          else
+            love.graphics.print(text, element_x, element_y+text_x)
+          end
+          text_x = text_x + max_text_width
         end
-        text_x = text_x + max_text_width
+      else
+        love.graphics.print(element.text, element_x-1, element_y-1)
       end
-    else
-      love.graphics.print(element.text, element_x-1, element_y-1)
+    end,
+    image = function(element, element_x, element_y)
+      love.graphics.draw(element.image, element_x, element_y)
     end
-  end,
-  image = function(element, element_x, element_y)
-    love.graphics.draw(element.image, element_x, element_y)
-  end
-}
-return {
-  card_width=card_width,
-  card_height=card_height,
+  },
+  assets = {
+    deck = love.graphics.newImage("/Assets/deck.png"),
+    card = love.graphics.newImage("/Assets/card.png")
+  },
   new_card = function(card)
     setmetatable(
       card,
@@ -41,10 +39,10 @@ return {
               local color = self.color
               love.graphics.setColor(color.r, color.g, color.b)
             end
-            love.graphics.draw(assets.card, x, y)
+            love.graphics.draw(card_manager.assets.card, x, y)
             for element_num = 1, #self do
               local element = self[element_num]
-              if draw_element[element.type] then
+              if card_manager.draw_element[element.type] then
                 if element.r and element.g and element.b then
                   love.graphics.setColor(element.r, element.g, element.b)
                 end
@@ -58,11 +56,11 @@ return {
                   elseif element.type == "image" then
                     width = element.image:getWidth()
                   end
-                  element_x = card_width/2-width/2
+                  element_x = card_manager.card_width/2-width/2
                 end
                 element_x = element_x + x
                 element_y = element_y + y
-                draw_element[element.type](element, element_x, element_y)
+                card_manager.draw_element[element.type](element, element_x, element_y)
               end
             end
           end
@@ -78,7 +76,7 @@ return {
         __index = {
           draw = function(self)
             if #self==0 then
-              love.graphics.draw(assets.deck, self.x, self.y)
+              love.graphics.draw(card_manager.assets.deck, self.x, self.y)
             else
               local x = 3
               local y = 3
@@ -89,7 +87,7 @@ return {
             end
           end,
           is_clicked = function(self, mouse_x, mouse_y)
-            return (mouse_x<self.x+card_width-1) and (mouse_y<self.y+card_height-1) and (mouse_y>self.y) and (mouse_x>self.x)
+            return (mouse_x<self.x+card_manager.card_width-1) and (mouse_y<self.y+card_manager.card_height-1) and (mouse_y>self.y) and (mouse_x>self.x)
           end
         }
       }
@@ -180,3 +178,4 @@ return {
     end
   }
 }
+return card_manager
