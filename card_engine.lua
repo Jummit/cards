@@ -1,5 +1,19 @@
 local card_width = 100
 local card_height = 150
+local assets = {
+  deck = love.graphics.newImage("/Assets/deck.png"),
+  card = love.graphics.newImage("/Assets/card.png")
+}
+local draw_element = {
+  text = function(element, x, y)
+    local element_x = element.x
+    if element_x == "middle" then element_x = card_width/2-#element.text*6/2 end
+    love.graphics.print(element.text, element_x+x-1, element.y+y-1)
+  end,
+  image = function(element, x, y)
+    love.graphics.draw(element.image, element.x+x, element.y+y)
+  end
+}
 return {
   card_width=card_width,
   card_height=card_height,
@@ -13,7 +27,16 @@ return {
               local color = self.color
               love.graphics.setColor(color.r, color.g, color.b)
             end
-            love.graphics.rectangle("fill", x, y, card_width, card_height)
+            love.graphics.draw(assets.card, x, y)
+            for element_num = 1, #self do
+              local element = self[element_num]
+              if draw_element[element.type] then
+                if element.r and element.g and element.b then
+                  love.graphics.setColor(element.r, element.g, element.b)
+                end
+                draw_element[element.type](element, x, y)
+              end
+            end
           end
         }
       }
@@ -26,12 +49,19 @@ return {
       {
         __index = {
           draw = function(self)
-            local x = 3
-            local y = 3
-            for card_num = 1, #self do
-              local card = self[card_num]
-              card:draw(self.x+x*card_num, self.y+y*card_num)
+            if #self==0 then
+              love.graphics.draw(assets.deck, self.x, self.y)
+            else
+              local x = 3
+              local y = 3
+              for card_num = 1, #self do
+                local card = self[card_num]
+                card:draw(self.x+x*card_num, self.y+y*card_num)
+              end
             end
+          end,
+          is_clicked = function(self, mouse_x, mouse_y)
+            return (mouse_x<self.x+card_width-1) and (mouse_y<self.y+card_height-1) and (mouse_y>self.y) and (mouse_x>self.x)
           end
         }
       }
@@ -39,6 +69,7 @@ return {
     return deck
   end,
   new_game = function(decks)
+    decks.timer = 0
     setmetatable(
       decks,
       {
@@ -57,21 +88,26 @@ return {
             end
           end,
           update = function(self, dt)
+            mouse_x, mouse_y = love.mouse.getPosition()
+            if self.timer>0 then self.timer = self.timer-dt end
             if love.mouse.isDown("l") then
-              mouse_x, mouse_y = love.mouse.getPosition()
               for deck_num = 1, #self do
                 local deck = self[deck_num]
-                for card_num = 1, #self[deck_num] do
-                  local card = deck[card_num]
-                  if mouse_x>deck.x and mouse_y>deck.y then
-                    if mouse_x<deck.x+card_width-1 and mouse_y<deck.y+card_height-1 then
+                if deck:is_clicked(mouse_x, mouse_y) and self.timer<=0 then
+                  self.timer = 0.4
+                  if self.grabbed then
+                    table.insert(deck,self.grabbed.card)
+                    self.grabbed = nil
+                  else
+                    if #deck > 0 then
                       self.grabbed = {
-                        card = card,
+                        card = deck[#deck],
                         offset = {
                           x = mouse_x-deck.x,
                           y = mouse_y-deck.y
                         }
                       }
+                      deck[#deck] = nil
                     end
                   end
                 end
@@ -82,5 +118,12 @@ return {
       }
     )
     return decks
+  end,
+  new_layout = function(...)
+    for i = 1, #{...} do
+      return function(layout)
+        return new_card
+      end
+    end
   end
 }
