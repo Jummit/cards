@@ -5,13 +5,26 @@ local assets = {
   card = love.graphics.newImage("/Assets/card.png")
 }
 local draw_element = {
-  text = function(element, x, y)
-    local element_x = element.x
-    if element_x == "middle" then element_x = card_width/2-#element.text*6/2 end
-    love.graphics.print(element.text, element_x+x-1, element.y+y-1)
+  text = function(element, element_x, element_y)
+    if #element.text*5.5>card_width then
+      local text_x = 0
+      local max_text_width = element.w/5.5 or card_width/5.5
+      while true do
+        local text = string.sub(element.text, text_x, text_x+max_text_width-1)
+        print(text)
+        if text == "" then
+          break
+        else
+          love.graphics.print(text, element_x, element_y+text_x)
+        end
+        text_x = text_x + max_text_width
+      end
+    else
+      love.graphics.print(element.text, element_x-1, element_y-1)
+    end
   end,
-  image = function(element, x, y)
-    love.graphics.draw(element.image, element.x+x, element.y+y)
+  image = function(element, element_x, element_y)
+    love.graphics.draw(element.image, element_x, element_y)
   end
 }
 return {
@@ -34,7 +47,20 @@ return {
                 if element.r and element.g and element.b then
                   love.graphics.setColor(element.r, element.g, element.b)
                 end
-                draw_element[element.type](element, x, y)
+                local element_x = element.x
+                local element_y = element.y
+                if element.x == "middle" then
+                  local width = 1
+                  if element.type == "text" then
+                    width = #element.text*5.5
+                  elseif element.type == "image" then
+                    width = element.image:getWidth()
+                  end
+                  element_x = card_width/2-width/2
+                end
+                element_x = element_x + x
+                element_y = element_y + y
+                draw_element[element.type](element, element_x, element_y)
               end
             end
           end
@@ -135,14 +161,15 @@ return {
         {
           type="image",
           image=image,
-          x=8,
+          x="middle",
           y=25
         },
         {
           type="text",
           text=description,
-          x="middle",
-          y=50,
+          x=10,
+          y=80,
+          w=70,
           r=255,
           g=255,
           b=255
