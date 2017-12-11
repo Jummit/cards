@@ -7,8 +7,9 @@ local assets = {
 local draw_element = {
   text = function(element, element_x, element_y)
     if #element.text*5.5>card_width then
+      local Font = love.graphics.getFont()
       local text_x = 0
-      local max_text_width = element.w/5.5 or card_width/5.5
+      local max_text_width = element.w/Font:getWidth("d") or card_width/Font:getWidth("d")
       while true do
         local text = string.sub(element.text, text_x, text_x+max_text_width-1)
         print(text)
@@ -49,10 +50,11 @@ return {
                 end
                 local element_x = element.x
                 local element_y = element.y
+                local Font = love.graphics.getFont()
                 if element.x == "middle" then
                   local width = 1
                   if element.type == "text" then
-                    width = #element.text*5.5
+                    width = Font:getWidth(element.text)
                   elseif element.type == "image" then
                     width = element.image:getWidth()
                   end
@@ -169,7 +171,7 @@ return {
           text=description,
           x=10,
           y=80,
-          w=70,
+          w=100,
           r=255,
           g=255,
           b=255
