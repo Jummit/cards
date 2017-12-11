@@ -1,13 +1,19 @@
 function love.load()
-  cardengine = require "/card_engine"
+  card_engine = require "/card_engine"
   cards = require "/card_manager"
-  game = cardengine.new_game(
+  game = card_engine.new_game(
     {
-      cardengine.new_deck(
+      card_engine.new_deck(
         {
           x=100,
           y=200,
           cards.tree
+        }
+      ),
+      card_engine.new_deck(
+        {
+          x=10,
+          y=100
         }
       )
     }
@@ -15,6 +21,8 @@ function love.load()
 end
 
 function love.draw()
+  love.graphics.setBackgroundColor(255, 255, 255)
+  love.graphics.clear()
   game:draw()
 end
 
