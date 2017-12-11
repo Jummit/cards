@@ -119,11 +119,35 @@ return {
     )
     return decks
   end,
-  new_layout = function(...)
-    for i = 1, #{...} do
-      return function(layout)
-        return new_card
-      end
+  layouts = {
+    default = function(color, title, image, description)
+      return {
+        color=color,
+        {
+          type="text",
+          text=title,
+          x="middle",
+          y=13,
+          r=255,
+          g=255,
+          b=255
+        },
+        {
+          type="image",
+          image=image,
+          x=8,
+          y=25
+        },
+        {
+          type="text",
+          text=description,
+          x="middle",
+          y=50,
+          r=255,
+          g=255,
+          b=255
+        }
+      }
     end
-  end
+  }
 }
