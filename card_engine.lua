@@ -122,6 +122,9 @@ card_manager = {
                 if deck:is_clicked(mouse_x, mouse_y) and self.timer<=0 then
                   self.timer = 0.4
                   if self.grabbed then
+                    if self.grabbed.card.play_function then
+                      self.grabbed.card.play_function(self.grabbed.card, deck)
+                    end
                     table.insert(deck,self.grabbed.card)
                     self.grabbed = nil
                   else
@@ -146,9 +149,10 @@ card_manager = {
     return decks
   end,
   layouts = {
-    default = function(color, title, image, description)
+    default = function(color, title, image, description, runfunction)
       return {
         color=color,
+        play_function=runfunction,
         {
           type="text",
           text=title,
