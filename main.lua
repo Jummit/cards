@@ -1,23 +1,7 @@
 function love.load()
   card_engine = require "/card_engine"
-  cards = require "/card_manager"
-  game = card_engine.new_game(
-    {
-      card_engine.new_deck(
-        {
-          x=100,
-          y=200,
-          cards.tree
-        }
-      ),
-      card_engine.new_deck(
-        {
-          x=10,
-          y=100
-        }
-      )
-    }
-  )
+  card_manager = require "/card_manager"
+  game = card_manager.game
 end
 
 function love.draw()
