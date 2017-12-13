@@ -1,3 +1,4 @@
+local utils = require "/utils"
 local card_manager = {}
 card_manager = {
   card_width=100,
@@ -63,32 +64,35 @@ card_manager = {
                 card_manager.draw_element[element.type](element, element_x, element_y)
               end
             end
+          end,
+          is_clicked = function(self, x, y, mouse_x, mouse_y)
+            return utils.is_box_clicked(x, y, card_manager.card_width, card_manager.card_height, mouse_x,  mouse_y)
           end
         }
       }
     )
     return card
   end,
-  new_deck = function(deck)
+  new_deck = function(deck, height_distance_between_cards, width_distance_between_cards)
     setmetatable(
       deck,
       {
         __index = {
+          get_card_pos = function(self, card)
+            return self.x+height_distance_between_cards*card, self.y+width_distance_between_cards*card
+          end,
           draw = function(self)
             if #self==0 then
               love.graphics.draw(card_manager.assets.deck, self.x, self.y)
             else
-              local x = 3
-              local y = 3
+              local x = height_distance_between_cards
+              local y = width_distance_between_cards
               for card_num = 1, #self do
                 local card = self[card_num]
-                card:draw(self.x+x*card_num, self.y+y*card_num)
+                card:draw(self:get_card_pos(card_num))
               end
             end
           end,
-          is_clicked = function(self, mouse_x, mouse_y)
-            return (mouse_x<self.x+card_manager.card_width-1) and (mouse_y<self.y+card_manager.card_height-1) and (mouse_y>self.y) and (mouse_x>self.x)
-          end
         }
       }
     )
@@ -119,24 +123,35 @@ card_manager = {
             if love.mouse.isDown("l") then
               for deck_num = 1, #self do
                 local deck = self[deck_num]
-                if deck:is_clicked(mouse_x, mouse_y) and self.timer<=0 then
-                  self.timer = 0.4
-                  if self.grabbed then
-                    if self.grabbed.card.play_function then
-                      self.grabbed.card.play_function(self.grabbed.card, deck)
-                    end
-                    table.insert(deck,self.grabbed.card)
-                    self.grabbed = nil
-                  else
-                    if #deck > 0 then
-                      self.grabbed = {
-                        card = deck[#deck],
-                        offset = {
-                          x = mouse_x-deck.x,
-                          y = mouse_y-deck.y
-                        }
-                      }
-                      deck[#deck] = nil
+                if #deck == 0 then
+
+                else
+                  for card_num = 1, #deck do
+                    local card = deck[card_num]
+                    local card_x, card_y = deck:get_card_pos(card_num)
+                    if self.timer<=0 and card:is_clicked(card_x, card_y, mouse_x, mouse_y) then
+                      self.timer = 0.4
+                      if self.grabbed then
+                        if self.grabbed.card.play_function then
+                          self.grabbed.card.play_function(self.grabbed.card, deck)
+                        end
+                        table.insert(deck,self.grabbed.card)
+                        self.grabbed = nil
+                      else
+                        if #deck > 0 then
+                          local card = deck[card_num]
+                          local card_x, card_y = deck:get_card_pos(card_num)
+                          self.grabbed = {
+                            card = card,
+                            offset = {
+                              x = mouse_x-card_x,
+                              y = mouse_y-card_y
+                            }
+                          }
+                          table.remove(deck, card_num)
+                        end
+                      end
+                      break
                     end
                   end
                 end
